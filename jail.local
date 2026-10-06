@@ -9,6 +9,9 @@ findtime = 10s
 [sshd]
 enabled = false
 
+[sshd-ddos]
+enabled = false
+
 [http-flood]
 enabled = true
 filter = http-flood
