@@ -1,0 +1,19 @@
+[DEFAULT]
+banaction = iptables-multiport
+backend = polling
+usedns = no
+ignoreip = 127.0.0.1/8
+bantime = 10m
+findtime = 10s
+
+[sshd]
+enabled = false
+
+[http-flood]
+enabled = true
+filter = http-flood
+logpath = /var/log/backend/access.log
+port = 5000
+maxretry = 60
+findtime = 10s
+bantime = 10m

@@ -2,6 +2,7 @@ import os
 import sqlite3
 import hashlib
 import datetime
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from cryptography.fernet import Fernet
@@ -23,6 +24,16 @@ LDAP_HOST = os.getenv("LDAP_HOST", "openldap")
 LDAP_PORT = int(os.getenv("LDAP_PORT", "389"))
 LDAP_BASE_DN = os.getenv("LDAP_BASE_DN", "dc=example,dc=com")
 LDAP_ADMIN_DN = os.getenv("LDAP_ADMIN_DN", f"cn=admin,{LDAP_BASE_DN}")
+AUTH_FAILURE_LOG = os.getenv("AUTH_FAILURE_LOG", "/var/log/backend/auth-failures.log")
+
+os.makedirs(os.path.dirname(AUTH_FAILURE_LOG), exist_ok=True)
+auth_failure_logger = logging.getLogger("ldap_auth_failures")
+auth_failure_logger.setLevel(logging.WARNING)
+auth_failure_logger.propagate = False
+if not auth_failure_logger.handlers:
+    auth_log_handler = logging.FileHandler(AUTH_FAILURE_LOG, encoding="utf-8")
+    auth_log_handler.setFormatter(logging.Formatter("%(asctime)s Failed LDAP authentication from %(message)s"))
+    auth_failure_logger.addHandler(auth_log_handler)
 
 DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/data/secrets_vault.db")
 DATABASE_ENCRYPTION_KEY = os.getenv(
@@ -247,6 +258,7 @@ def ldap_login():
             connection.unbind()
             return jsonify(user_info), 200
 
+        auth_failure_logger.warning(request.remote_addr or "unknown")
         return jsonify({
             "authenticated": False,
             "detail": "Credenciales LDAP inválidas (Usuario o contraseña incorrectos)"

@@ -37,3 +37,17 @@ Este módulo implementa la API REST central del sistema con autenticación integ
 pip install -r requirements.txt
 python app.py
 ```
+
+## 🛡️ Protección HTTP y fallos LDAP
+
+La imagen inicia Fail2Ban junto con la API. El jail `http-flood` lee `/var/log/backend/access.log` y bloquea en el puerto 5000 al superar 60 peticiones en 10 segundos desde una IP. Cuando un bind LDAP falla por credenciales inválidas, el backend escribe solo la IP remota en `/var/log/backend/auth-failures.log`; no registra contraseñas ni nombres de usuario. El contenedor LDAP consume ese archivo compartido y aplica su jail al puerto LDAPS 636.
+
+El despliegue requiere la capacidad `NET_ADMIN` para que la acción `iptables-multiport` aplique los bans. Comandos de diagnóstico:
+
+```sh
+fail2ban-client status http-flood
+tail -n 50 /var/log/backend/auth-failures.log
+tail -n 50 /var/log/fail2ban.log
+```
+
+La configuración conjunta está en `trabajo7-fail2ban-deploy`.
