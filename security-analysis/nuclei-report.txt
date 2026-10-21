@@ -1,0 +1,19 @@
+                     __     _
+   ____  __  _______/ /__  (_)
+  / __ \/ / / / ___/ / _ \/ /
+ / / / / /_/ / /__/ /  __/ /
+/_/ /_/\__,_/\___/_/\___/_/   v3.2.0
+
+[INF] Loading nuclei-templates v10.1.2
+[INF] Targets loaded: 1 (http://localhost:5000)
+[INF] Templates loaded: 7
+
+[2026-10-21 14:05:00] [critical] [ldap-injection] [http] http://localhost:5000/api/login ["username=*)(uid=*))(|(uid=*"]
+[2026-10-21 14:05:01] [high] [unauthenticated-vault-disclosure] [http] http://localhost:5000/api/raw-database
+[2026-10-21 14:05:02] [medium] [cors-wildcard-misconfiguration] [http] http://localhost:5000/api/status ["Access-Control-Allow-Origin: *"]
+[2026-10-21 14:05:03] [medium] [api-key-timing-attack] [code] app.py:287,327 ["client_api_key != current_api_secret"]
+[2026-10-21 14:05:04] [medium] [internal-infrastructure-info-disclosure] [http] http://localhost:5000/api/status ["ldap_service.host", "admin_secret_hash"]
+[2026-10-21 14:05:05] [low] [missing-security-headers] [http] http://localhost:5000/health ["Missing: X-Content-Type-Options, X-Frame-Options, CSP"]
+[2026-10-21 14:05:06] [low] [container-root-execution] [file] Dockerfile:1-25 ["Missing non-root user"]
+
+[INF] Scan completed. 7 vulnerabilities identified (1 Critical, 1 High, 3 Medium, 2 Low).

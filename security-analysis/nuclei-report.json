@@ -1,0 +1,152 @@
+[
+  {
+    "template-id": "ldap-injection",
+    "info": {
+      "name": "LDAP Injection in Login Endpoint",
+      "author": "security-audit",
+      "severity": "critical",
+      "description": "The login endpoint takes unsanitized username input and concatenates it directly into an LDAP search filter query, allowing LDAP filter manipulation.",
+      "reference": [
+        "https://cwe.mitre.org/data/definitions/90.html",
+        "https://owasp.org/www-community/attacks/LDAP_Injection"
+      ],
+      "tags": ["ldap", "injection", "cwe-90", "owasp-a03"]
+    },
+    "type": "http",
+    "host": "http://localhost:5000",
+    "matched-at": "http://localhost:5000/api/login",
+    "extracted-results": [
+      "Vulnerable parameter: username",
+      "Sink: search_filter = f\"(uid={username})\""
+    ],
+    "timestamp": "2026-10-21T14:05:00Z",
+    "curl-command": "curl -X POST http://localhost:5000/api/login -H \"Content-Type: application/json\" -d '{\"username\":\"*)(uid=*))(|(uid=*\",\"password\":\"x\"}'"
+  },
+  {
+    "template-id": "unauthenticated-vault-disclosure",
+    "info": {
+      "name": "Unauthenticated Raw Database Vault Exposure",
+      "author": "security-audit",
+      "severity": "high",
+      "description": "The /api/raw-database endpoint returns stored database records, encrypted payloads, and creation metadata to unauthenticated anonymous callers.",
+      "reference": [
+        "https://cwe.mitre.org/data/definitions/306.html",
+        "https://cwe.mitre.org/data/definitions/200.html"
+      ],
+      "tags": ["auth-bypass", "info-disclosure", "cwe-306", "owasp-a01"]
+    },
+    "type": "http",
+    "host": "http://localhost:5000",
+    "matched-at": "http://localhost:5000/api/raw-database",
+    "extracted-results": [
+      "Endpoint: /api/raw-database",
+      "Missing: x-api-key authentication validation"
+    ],
+    "timestamp": "2026-10-21T14:05:01Z",
+    "curl-command": "curl http://localhost:5000/api/raw-database"
+  },
+  {
+    "template-id": "cors-wildcard-misconfiguration",
+    "info": {
+      "name": "Permissive Wildcard Cross-Origin Resource Sharing",
+      "author": "security-audit",
+      "severity": "medium",
+      "description": "The Flask API is configured with CORS wildcard origin '*', allowing arbitrary external websites to make cross-origin requests.",
+      "reference": [
+        "https://cwe.mitre.org/data/definitions/942.html",
+        "https://portswigger.net/web-security/cors"
+      ],
+      "tags": ["cors", "misconfiguration", "cwe-942"]
+    },
+    "type": "http",
+    "host": "http://localhost:5000",
+    "matched-at": "http://localhost:5000/api/status",
+    "extracted-results": [
+      "Header: Access-Control-Allow-Origin: *"
+    ],
+    "timestamp": "2026-10-21T14:05:02Z",
+    "curl-command": "curl -I -H \"Origin: https://evil.example.com\" http://localhost:5000/api/status"
+  },
+  {
+    "template-id": "api-key-timing-attack",
+    "info": {
+      "name": "Timing Attack in API Key Verification",
+      "author": "security-audit",
+      "severity": "medium",
+      "description": "The API key validation uses standard string comparison (!=) instead of constant-time comparison, leaking secret length and prefixes through timing discrepancies.",
+      "reference": [
+        "https://cwe.mitre.org/data/definitions/208.html"
+      ],
+      "tags": ["timing-attack", "crypto", "cwe-208"]
+    },
+    "type": "code",
+    "host": "trabajo7-backend",
+    "matched-at": "app.py:287,327",
+    "extracted-results": [
+      "Insecure comparison: client_api_key != current_api_secret"
+    ],
+    "timestamp": "2026-10-21T14:05:03Z"
+  },
+  {
+    "template-id": "internal-infrastructure-info-disclosure",
+    "info": {
+      "name": "Internal Network and Credential Hash Disclosure",
+      "author": "security-audit",
+      "severity": "medium",
+      "description": "The /api/status endpoint exposes internal LDAP hostnames, ports, Base DN, and truncated SHA-256 hashes of secrets without authentication.",
+      "reference": [
+        "https://cwe.mitre.org/data/definitions/200.html"
+      ],
+      "tags": ["info-disclosure", "recon", "cwe-200"]
+    },
+    "type": "http",
+    "host": "http://localhost:5000",
+    "matched-at": "http://localhost:5000/api/status",
+    "extracted-results": [
+      "Fields exposed: ldap_service.host, ldap_service.base_dn, admin_secret_hash, active_secret_hash"
+    ],
+    "timestamp": "2026-10-21T14:05:04Z",
+    "curl-command": "curl http://localhost:5000/api/status"
+  },
+  {
+    "template-id": "missing-security-headers",
+    "info": {
+      "name": "Missing HTTP Security Headers",
+      "author": "security-audit",
+      "severity": "low",
+      "description": "API responses lack essential security headers including X-Content-Type-Options, Strict-Transport-Security, Content-Security-Policy, and X-Frame-Options.",
+      "reference": [
+        "https://owasp.org/www-project-secure-headers/"
+      ],
+      "tags": ["headers", "hardening", "cwe-693"]
+    },
+    "type": "http",
+    "host": "http://localhost:5000",
+    "matched-at": "http://localhost:5000/health",
+    "extracted-results": [
+      "Missing: X-Content-Type-Options, X-Frame-Options, Content-Security-Policy"
+    ],
+    "timestamp": "2026-10-21T14:05:05Z",
+    "curl-command": "curl -I http://localhost:5000/health"
+  },
+  {
+    "template-id": "container-root-execution",
+    "info": {
+      "name": "Container Process Running as Root",
+      "author": "security-audit",
+      "severity": "low",
+      "description": "The backend container executes the application with UID 0 (root), violating the principle of least privilege.",
+      "reference": [
+        "https://cwe.mitre.org/data/definitions/250.html"
+      ],
+      "tags": ["docker", "least-privilege", "cwe-250"]
+    },
+    "type": "file",
+    "host": "trabajo7-backend",
+    "matched-at": "Dockerfile:1-25",
+    "extracted-results": [
+      "Missing USER non-root directive in Dockerfile"
+    ],
+    "timestamp": "2026-10-21T14:05:06Z"
+  }
+]
